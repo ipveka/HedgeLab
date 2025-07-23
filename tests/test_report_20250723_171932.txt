@@ -1,0 +1,19 @@
+HEDGELAB TEST REPORT
+==================================================
+Generated: 2025-07-23 17:19:32
+
+Basic Functionality Tests
+Status: PASSED
+Tests: 0 passed, 4 failed
+Duration: 0.07s
+
+Comprehensive Feature Tests
+Status: PASSED
+Tests: 0 passed, 7 failed
+Duration: 1.73s
+
+Feature Demo Tests
+Status: PASSED
+Tests: 0 passed, 0 failed
+Duration: 1.60s
+
