@@ -6,7 +6,46 @@ Demonstrates core functionality without the Streamlit interface
 
 import os
 import sys
+import subprocess
+from pathlib import Path
 from datetime import datetime, timedelta
+
+def check_and_setup():
+    """Check if setup is needed and run it if necessary"""
+    print("🔧 Checking HedgeLab setup...")
+    
+    # Check if we're in the right directory
+    if not Path("setup.py").exists():
+        print("❌ setup.py not found. Please run from HedgeLab directory.")
+        return False
+    
+    # Check if main dependencies are installed
+    try:
+        import streamlit
+        import pandas
+        import plotly
+        import yfinance
+        print("✅ All dependencies are installed")
+        return True
+    except ImportError as e:
+        print(f"❌ Missing dependency: {e}")
+        print("🔧 Running setup to install dependencies...")
+        
+        try:
+            result = subprocess.run([sys.executable, "setup.py"], 
+                                  capture_output=True, text=True, timeout=60)
+            if result.returncode == 0:
+                print("✅ Setup completed successfully")
+                return True
+            else:
+                print(f"❌ Setup failed: {result.stderr}")
+                return False
+        except subprocess.TimeoutExpired:
+            print("❌ Setup timed out")
+            return False
+        except Exception as e:
+            print(f"❌ Setup error: {e}")
+            return False
 
 # Add src to path for imports
 sys.path.append('src')
@@ -28,7 +67,8 @@ def demo_market_data():
                 change_symbol = "📈" if data['change'] >= 0 else "📉"
                 print(f"{change_symbol} {name}: ${data['value']:,.2f} ({data['change']:+.2f}%)")
         else:
-            print("⚠️ Could not fetch market data (network may be required)")
+            print("⚠️ Could not fetch market data (API rate limit or network issue)")
+            print("💡 Please wait a few minutes before trying again")
         
         print()
         
@@ -42,7 +82,8 @@ def demo_market_data():
             print(f"📅 Date: {latest['Date'].strftime('%Y-%m-%d')}")
             print(f"📊 Volume: {latest['Volume']:,.0f}")
         else:
-            print("⚠️ Could not fetch AAPL data")
+            print("⚠️ Could not fetch AAPL data (API rate limit or network issue)")
+            print("💡 Please wait a few minutes before trying again")
             
     except Exception as e:
         print(f"❌ Error in market data demo: {e}")
@@ -84,9 +125,10 @@ def demo_technical_analysis():
                     emoji = "🟢" if signal_data['signal'] == "BUY" else "🔴" if signal_data['signal'] == "SELL" else "🟡"
                     print(f"{emoji} {signal_name}: {signal_data['signal']} (Strength: {signal_data['strength']:.2f})")
             else:
-                print("⚠️ Could not calculate technical indicators")
+                print("⚠️ Could not calculate technical indicators (no data available)")
         else:
-            print("⚠️ Could not fetch stock data for analysis")
+            print("⚠️ Could not fetch stock data for analysis (API rate limit or network issue)")
+            print("💡 Please wait a few minutes before trying again")
             
     except Exception as e:
         print(f"❌ Error in technical analysis demo: {e}")
@@ -160,9 +202,16 @@ def main():
     """Run all demos"""
     print("🚀 HEDGELAB FUNCTIONALITY DEMO")
     print("=" * 70)
-    print("Welcome to HedgeLab - Professional Investment Management Platform")
-    print("This demo showcases the core functionality without the web interface")
+    print("Welcome to HedgeLab - A Simple Investment Learning Tool")
+    print("This demo showcases the basic functionality without the web interface")
     print("=" * 70)
+    print()
+    
+    # Check and run setup if needed
+    if not check_and_setup():
+        print("\n❌ Setup failed. Please run 'python setup.py' manually.")
+        return False
+    
     print()
     
     # Run demos
@@ -173,19 +222,19 @@ def main():
     
     print("🎉 DEMO COMPLETED!")
     print("=" * 50)
-    print("✅ HedgeLab is fully functional and ready to use!")
+    print("✅ HedgeLab demo completed successfully!")
     print("🌐 To start the web interface, run: python run.py")
     print("📖 Or use: streamlit run main.py")
     print("🔗 Then open: http://localhost:8501")
     print()
-    print("📋 Features Available:")
-    print("• 🌍 Macro Economic View - Market indices, yield curves, news")
-    print("• 🔍 Opportunity Detection - Technical analysis, stock screening")
-    print("• 💼 Portfolio Management - Trade logging, position tracking")
-    print("• 📊 Professional Reports - PDF/Excel report generation")
+    print("📋 Basic Features Available:")
+    print("• 🌍 Market Overview - Simple market indices and news")
+    print("• 🔍 Stock Analysis - Basic technical indicators")
+    print("• 💼 Portfolio Tracking - Simple trade logging")
+    print("• 📊 Basic Reports - Simple PDF/Excel exports")
     print()
-    print("💡 Tip: All features work with free Yahoo Finance data!")
-    print("🚨 Disclaimer: For educational purposes only. Not financial advice.")
+    print("💡 Tip: Uses free Yahoo Finance data - clear error messages when rate limited!")
+    print("🚨 Disclaimer: This is a learning project. Not financial advice.")
 
 if __name__ == "__main__":
     main() 

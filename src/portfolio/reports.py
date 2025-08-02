@@ -17,7 +17,7 @@ from src.data.market_data import market_data
 from src.ui.components import loading_spinner, format_currency, format_percentage
 
 class ReportGenerator:
-    """Generate professional PDF and Excel reports for portfolio performance"""
+    """Generate simple PDF and Excel reports for portfolio performance"""
     
     def __init__(self):
         self.database = db
