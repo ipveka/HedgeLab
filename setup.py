@@ -68,9 +68,11 @@ def setup_hedgelab():
     if not check_python_version():
         return False
     
-    # Install dependencies
+    # Install dependencies first
+    print("📦 Installing required packages...")
     if not run_command("pip install -r requirements.txt", "Installing dependencies"):
         print("💡 Tip: Try using 'pip3 install -r requirements.txt' or create a virtual environment")
+        print("💡 Alternative: python -m pip install -r requirements.txt")
         return False
     
     # Create environment file
@@ -85,14 +87,15 @@ def setup_hedgelab():
     print("\n🎉 HedgeLab setup completed successfully!")
     print("\n📋 Next Steps:")
     print("1. Edit the .env file with your API keys (optional)")
-    print("2. Run the application: streamlit run main.py")
-    print("3. Open your browser to http://localhost:8501")
+    print("2. Run the demo: python demo.py")
+    print("3. Start the app: python run.py")
+    print("4. Open your browser to http://localhost:8501")
     
     print("\n📖 Documentation:")
-    print("• Yahoo Finance data is free and works without API keys")
-    print("• Supabase is optional for cloud database storage")
-    print("• Reddit API is optional for sentiment analysis")
-    print("• All features work in demo mode without external APIs")
+    print("• Yahoo Finance data is free but has rate limits")
+    print("• Clear error messages when APIs are unavailable")
+    print("• All features work when APIs are available")
+    print("• This is a learning project, not professional software")
     
     return True
 

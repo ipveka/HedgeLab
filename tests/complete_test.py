@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-HedgeLab Comprehensive Test Suite
-Tests all major functionality of the application
+HedgeLab Basic Test Suite
+Tests the main functionality of the application
 """
 
 import sys
@@ -303,8 +303,8 @@ def test_macro_view():
         return [("Macro View", False, str(e))]
 
 def main():
-    """Run comprehensive test suite"""
-    print("🚀 HEDGELAB COMPREHENSIVE TEST SUITE")
+    """Run basic test suite"""
+    print("🚀 HEDGELAB BASIC TEST SUITE")
     print("=" * 60)
     
     test_results = TestResults()

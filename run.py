@@ -9,19 +9,42 @@ import sys
 import subprocess
 from pathlib import Path
 
-def check_dependencies():
-    """Check if required dependencies are installed"""
+def check_and_setup():
+    """Check if setup is needed and run it if necessary"""
+    print("🔧 Checking HedgeLab setup...")
+    
+    # Check if we're in the right directory
+    if not Path("setup.py").exists():
+        print("❌ setup.py not found. Please run from HedgeLab directory.")
+        return False
+    
+    # Check if main dependencies are installed
     try:
         import streamlit
         import pandas
         import plotly
         import yfinance
-        print("✅ All core dependencies are installed")
+        print("✅ All dependencies are installed")
         return True
     except ImportError as e:
         print(f"❌ Missing dependency: {e}")
-        print("💡 Run 'python setup.py' to install dependencies")
-        return False
+        print("🔧 Running setup to install dependencies...")
+        
+        try:
+            result = subprocess.run([sys.executable, "setup.py"], 
+                                  capture_output=True, text=True, timeout=60)
+            if result.returncode == 0:
+                print("✅ Setup completed successfully")
+                return True
+            else:
+                print(f"❌ Setup failed: {result.stderr}")
+                return False
+        except subprocess.TimeoutExpired:
+            print("❌ Setup timed out")
+            return False
+        except Exception as e:
+            print(f"❌ Setup error: {e}")
+            return False
 
 def run_hedgelab():
     """Run the HedgeLab application"""
@@ -33,8 +56,9 @@ def run_hedgelab():
         print("❌ main.py not found. Please run this script from the HedgeLab directory.")
         return False
     
-    # Check dependencies
-    if not check_dependencies():
+    # Check and run setup if needed
+    if not check_and_setup():
+        print("\n❌ Setup failed. Please run 'python setup.py' manually.")
         return False
     
     # Check for .env file

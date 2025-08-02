@@ -4,6 +4,8 @@
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.28%2B-red)
 ![Status](https://img.shields.io/badge/Status-Work%20in%20Progress-orange)
 
+> **Quick Start**: Run `python setup.py` then `python run.py` to get started!
+
 **HedgeLab** is a personal learning project - a simple investment analysis tool built with Streamlit. It's designed to help me learn about financial markets, data analysis, and web development. This is definitely not professional-grade software!
 
 ## ⚠️ Important Disclaimers
@@ -40,20 +42,20 @@
 - Excel exports
 - Performance summaries
 
-## 🚀 Getting Started (If You Want to Try It)
+## 🚀 Getting Started (Simple Setup)
 
 ### Prerequisites
 - Python 3.8 or higher
 - pip package manager
 
-### 1. Installation
+### 1. Quick Setup
 
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/HedgeLab.git
 cd HedgeLab
 
-# Run the setup script
+# Run the setup script (installs dependencies)
 python setup.py
 ```
 
@@ -74,11 +76,14 @@ REDDIT_CLIENT_SECRET=your_reddit_client_secret
 ### 3. Run the Application
 
 ```bash
-# Start the app
+# Start the app (recommended)
 python run.py
 
 # Or directly with Streamlit
 streamlit run main.py
+
+# Or run the demo first
+python demo.py
 ```
 
 ### 4. Access the Application
@@ -91,13 +96,14 @@ Open your browser and go to: `http://localhost:8501`
 1. **Check Macro View**: See what the overall market looks like
 2. **Try Opportunity Detection**: Look for stocks that might be interesting
 3. **Log Some Trades**: Practice tracking hypothetical trades
-4. **Check Performance**: See how your mock portfolio is doing
+4. **Check Performance**: See how your portfolio is doing
 5. **Generate Reports**: Try the reporting features
 
 ### What to Expect
-- **Mock Data**: When Yahoo Finance rate limits us, the app uses fake data
-- **Basic UI**: Simple Streamlit interface - nothing fancy
+- **Transparent API Limits**: Clear messages when Yahoo Finance rate limits are hit
+- **Simple UI**: Basic Streamlit interface - easy to use
 - **Learning Focus**: This is about understanding the concepts, not professional trading
+- **Rate Limit Handling**: Built-in protection and clear error messages
 
 ## 🛠️ Technical Stuff (For Developers)
 
@@ -127,7 +133,7 @@ hedgelab/
 ### Data Sources
 - **Market Data**: Yahoo Finance (free, rate limited)
 - **News**: RSS feeds from financial sites
-- **Everything else**: Mock data when APIs fail
+- **Error Handling**: Clear messages when APIs are unavailable
 
 ## 🔧 Configuration Options
 
@@ -143,7 +149,7 @@ hedgelab/
 
 ### What Works
 - Basic market data (when Yahoo Finance cooperates)
-- Mock data fallback (when APIs fail)
+- Clear error messages when APIs are rate limited
 - Simple technical analysis
 - Basic portfolio tracking
 
@@ -199,7 +205,6 @@ MIT License - feel free to use this code for learning.
 - [ ] Improving the UI (making it less basic)
 - [ ] Adding more features (slowly, as I learn)
 - [ ] Better error handling (when APIs fail)
-- [ ] More realistic mock data
 - [ ] Better documentation
 
 ## 📈 Current Status

@@ -19,13 +19,13 @@ load_dotenv()
 
 # Configure Streamlit page
 st.set_page_config(
-    page_title="HedgeLab - Professional Investment Management",
+    page_title="HedgeLab - Investment Learning Tool",
     page_icon="📈",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for professional styling
+# Custom CSS for simple styling
 st.markdown("""
 <style>
     .main-header {
@@ -72,10 +72,10 @@ def main():
     st.markdown("""
     <div class="main-header">
         <h1 style="color: white; margin: 0; text-align: center;">
-            📈 HedgeLab - Professional Investment Management
+            📈 HedgeLab - Investment Learning Tool
         </h1>
         <p style="color: #d1d5db; text-align: center; margin: 0.5rem 0 0 0;">
-            Institutional-grade analysis • Opportunity detection • Portfolio management
+            Basic stock analysis • Simple opportunity detection • Portfolio tracking
         </p>
     </div>
     """, unsafe_allow_html=True)

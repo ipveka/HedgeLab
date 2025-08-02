@@ -20,15 +20,22 @@ class MarketDataProvider:
     
     def __init__(self):
         self.cache_duration = 15  # minutes
-        self.rate_limit_delay = 1.0  # seconds between API calls
+        self.rate_limit_delay = 2.0  # increased delay between API calls
         self.last_api_call = 0
+        self.rate_limit_count = 0  # track rate limit hits
+        self.max_retries = 3  # maximum retries before showing error
         logger.info("MarketDataProvider initialized")
         
     @st.cache_data(ttl=900)  # 15 minutes cache
     def get_stock_data(_self, symbol: str, period: str = "1y") -> pd.DataFrame:
-        """Get stock data from Yahoo Finance"""
+        """Get stock data from Yahoo Finance with improved rate limit handling"""
         start_time = time.time()
         logger.info(f"Fetching stock data for {symbol}, period: {period}")
+        
+        # Check if we should skip due to too many rate limits
+        if _self.rate_limit_count >= _self.max_retries:
+            st.error(f"⚠️ API rate limit exceeded for {symbol}. Please wait a few minutes before trying again.")
+            return pd.DataFrame()
         
         try:
             # Rate limiting
@@ -47,6 +54,9 @@ class MarketDataProvider:
             _self.last_api_call = time.time()
             response_time = time.time() - start_time
             
+            # Reset rate limit counter on success
+            _self.rate_limit_count = 0
+            
             logger.api_call(f"yfinance_stock_data_{symbol}", "SUCCESS", response_time)
             logger.info(f"Successfully fetched {len(data)} records for {symbol}")
             
@@ -58,19 +68,18 @@ class MarketDataProvider:
             logger.api_call(f"yfinance_stock_data_{symbol}", "FAILED", response_time, error_msg)
             
             # Check for rate limiting
-            if "Too Many Requests" in error_msg or "Rate limited" in error_msg:
+            if "Too Many Requests" in error_msg or "Rate limited" in error_msg or "429" in error_msg:
+                _self.rate_limit_count += 1
                 logger.rate_limit(f"yfinance_stock_data_{symbol}")
-                st.warning(f"Rate limited for {symbol}. Using cached data if available.")
-            
-            # Fallback to mock data if available
-            if MOCK_DATA_AVAILABLE and mock_market_data:
-                logger.data_fallback(f"stock_data_{symbol}", error_msg)
-                st.warning(f"Using mock data for {symbol} (real data unavailable)")
-                return mock_market_data.get_stock_data(symbol, period)
+                st.error(f"⚠️ API rate limit hit for {symbol} ({_self.rate_limit_count}/{_self.max_retries}). Please wait before trying again.")
+                
+                # Increase delay for next call
+                _self.rate_limit_delay = min(_self.rate_limit_delay * 1.5, 10.0)
             else:
-                logger.error(f"Error fetching data for {symbol}: {e}")
                 st.error(f"Error fetching data for {symbol}: {e}")
-                return pd.DataFrame()
+            
+            logger.error(f"Error fetching data for {symbol}: {e}")
+            return pd.DataFrame()
     
     @st.cache_data(ttl=900)
     def get_multiple_stocks(_self, symbols: List[str], period: str = "1y") -> pd.DataFrame:
@@ -137,10 +146,14 @@ class MarketDataProvider:
                     logger.api_call(f"yfinance_index_{symbol}", "FAILED", None, error_msg)
                     
                     # Check for rate limiting
-                    if "Too Many Requests" in error_msg or "Rate limited" in error_msg:
+                    if "Too Many Requests" in error_msg or "Rate limited" in error_msg or "429" in error_msg:
+                        _self.rate_limit_count += 1
                         logger.rate_limit(f"yfinance_index_{symbol}")
                         rate_limit_hit = True
-                        st.warning(f"Rate limited for {name}. Using cached data if available.")
+                        st.warning(f"Rate limited for {name} ({_self.rate_limit_count}/{_self.max_retries}). Using fallback data.")
+                        
+                        # Increase delay for next call
+                        _self.rate_limit_delay = min(_self.rate_limit_delay * 1.5, 10.0)
                     else:
                         logger.warning(f"Error fetching {name}: {e}")
                         st.warning(f"Error fetching {name}: {e}")
@@ -153,12 +166,10 @@ class MarketDataProvider:
             else:
                 logger.api_call("yfinance_market_indices", "FAILED", response_time, "No indices fetched")
             
-            # If rate limited or no results, try fallback
+            # If rate limited or no results, show error
             if not results or rate_limit_hit:
-                if MOCK_DATA_AVAILABLE and mock_market_data:
-                    logger.data_fallback("market_indices", "Rate limited or no data")
-                    st.warning("Using mock market indices (real data unavailable)")
-                    return mock_market_data.get_market_indices()
+                st.error("⚠️ API rate limit exceeded for market indices. Please wait a few minutes before trying again.")
+                return {}
             
             return results
             
@@ -166,15 +177,9 @@ class MarketDataProvider:
             response_time = time.time() - start_time
             logger.api_call("yfinance_market_indices", "FAILED", response_time, str(e))
             
-            # Fallback to mock data
-            if MOCK_DATA_AVAILABLE and mock_market_data:
-                logger.data_fallback("market_indices", str(e))
-                st.warning("Using mock market indices (real data unavailable)")
-                return mock_market_data.get_market_indices()
-            else:
-                logger.error(f"Error fetching market indices: {e}")
-                st.error(f"Error fetching market indices: {e}")
-                return {}
+            logger.error(f"Error fetching market indices: {e}")
+            st.error(f"Error fetching market indices: {e}")
+            return {}
     
     @st.cache_data(ttl=3600)
     def get_treasury_rates(_self) -> Dict[str, float]:
@@ -204,13 +209,8 @@ class MarketDataProvider:
                     
             return results
         except Exception as e:
-            # Fallback to mock data
-            if MOCK_DATA_AVAILABLE and mock_market_data:
-                st.warning("Using mock treasury rates (real data unavailable)")
-                return mock_market_data.get_treasury_rates()
-            else:
-                st.error(f"Error fetching treasury rates: {e}")
-                return {}
+            st.error(f"Error fetching treasury rates: {e}")
+            return {}
     
     @st.cache_data(ttl=3600)
     def get_commodities(_self) -> Dict[str, float]:
@@ -241,13 +241,8 @@ class MarketDataProvider:
                     
             return results
         except Exception as e:
-            # Fallback to mock data
-            if MOCK_DATA_AVAILABLE and mock_market_data:
-                st.warning("Using mock commodities data (real data unavailable)")
-                return mock_market_data.get_commodities()
-            else:
-                st.error(f"Error fetching commodities: {e}")
-                return {}
+            st.error(f"Error fetching commodities: {e}")
+            return {}
     
     @st.cache_data(ttl=1800)  # 30 minutes cache
     def get_financial_news(_self, limit: int = 20) -> List[Dict]:
@@ -282,13 +277,8 @@ class MarketDataProvider:
             all_news.sort(key=lambda x: x.get('published', ''), reverse=True)
             return all_news[:limit]
         except Exception as e:
-            # Fallback to mock data
-            if MOCK_DATA_AVAILABLE and mock_market_data:
-                st.warning("Using mock news data (real data unavailable)")
-                return mock_market_data.get_financial_news(limit)
-            else:
-                st.error(f"Error fetching news: {e}")
-                return []
+            st.error(f"Error fetching news: {e}")
+            return []
     
     def get_stock_info(_self, symbol: str) -> Dict:
         """Get detailed stock information"""
@@ -317,13 +307,8 @@ class MarketDataProvider:
             
             return stock_info
         except Exception as e:
-            # Fallback to mock data
-            if MOCK_DATA_AVAILABLE and mock_market_data:
-                st.warning(f"Using mock stock info for {symbol} (real data unavailable)")
-                return mock_market_data.get_stock_info(symbol)
-            else:
-                st.error(f"Error fetching stock info for {symbol}: {e}")
-                return {}
+            st.error(f"Error fetching stock info for {symbol}: {e}")
+            return {}
     
     @st.cache_data(ttl=3600)
     def get_yield_curve(_self) -> pd.DataFrame:
@@ -369,21 +354,8 @@ class MarketDataProvider:
             
             return pd.DataFrame(yield_data)
         except Exception as e:
-            # Fallback to mock data
-            if MOCK_DATA_AVAILABLE and mock_market_data:
-                st.warning("Using mock yield curve data (real data unavailable)")
-                return mock_market_data.get_yield_curve()
-            else:
-                st.error(f"Error fetching yield curve: {e}")
-                return pd.DataFrame()
+            st.error(f"Error fetching yield curve: {e}")
+            return pd.DataFrame()
 
 # Global market data provider instance
-market_data = MarketDataProvider()
-
-# Import mock data as fallback
-try:
-    from .mock_data import mock_market_data
-    MOCK_DATA_AVAILABLE = True
-except ImportError:
-    MOCK_DATA_AVAILABLE = False
-    mock_market_data = None 
+market_data = MarketDataProvider() 
